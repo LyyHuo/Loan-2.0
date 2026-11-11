@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>គណនាកម្ចី</title>
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="img/32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="img/16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="img/256.png">
+  <link rel="stylesheet" href="css/style.css">
+  </head>
+
+<body>
+<div class="splash" aria-hidden="true">
+  <div class="splash-logo">$</div>
+  <div class="splash-title">គណនាកម្ចី</div>
+  <div class="splash-sub">Loan Calculator</div>
+  <div class="splash-bar"><i></i></div>
+  <div class="splash-version">Version 2.0.0</div>
+</div>
+<div class="app">
+  <div class="content-area">
+    <!-- Header -->
+    <header class="topbar">
+      <div class="d-flex justify-content-between align-items-center">
+        <h1> &nbsp; <span data-i18n="loanCalculator">គណនាកម្ចី</span></h1>
+        <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-sm btn-light p-1" id="languageBtn" type="button">
+            <span id="languageFlag" class="flag-emoji" role="img" aria-label="Switch language">🇬🇧</span>
+          </button>
+          <button class="btn btn-sm btn-light" id="themeBtn" type="button" aria-label="Switch theme"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z'/></svg></button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Calculator -->
+    <section class="calculator-card">
+      <div class="mb-4">
+        <label class="form-label" data-i18n="price">តម្លៃ</label>
+        <div class="input-group">
+          <span class="input-group-text">$</span>
+          <input id="price" type="number" inputmode="numeric" pattern="[0-9]*" class="form-control" value="0" placeholder="0" min="0" step="100">
+          <button class="input-group-text clear-btn" onclick="clearInput('price')">×</button>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label" data-i18n="downPayment">បង់មុន</label>
+        <div class="row g-2">
+          <div class="col-7">
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input id="downPayment" type="number" inputmode="numeric" pattern="[0-9]*" class="form-control" value="0" placeholder="0" min="0" step="100">
+              <button class="input-group-text clear-btn" onclick="clearInput('downPayment')">×</button>
+            </div>
+          </div>
+          <div class="col-5">
+            <div class="input-group">
+              <input id="downPercent" type="number" inputmode="numeric" pattern="[0-9]*" class="form-control" value="0" placeholder="0" min="0" max="100" step="1">
+              <span class="input-group-text">%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label" data-i18n="term">រយៈពេល</label>
+        <div class="row g-2">
+          <div class="col-7">
+            <input id="term" type="number" inputmode="numeric" pattern="[0-9]*" class="form-control" value="0" placeholder="0" min="0" step="1">
+          </div>
+          <div class="col-5">
+            <div class="btn-group segmented w-100" role="group">
+              <input type="radio" class="btn-check" name="termUnit" id="termYear" checked>
+              <label class="btn btn-outline-secondary" for="termYear"><span data-i18n="year">ឆ្នាំ</span></label>
+
+              <input type="radio" class="btn-check" name="termUnit" id="termMonth">
+              <label class="btn btn-outline-secondary" for="termMonth"><span data-i18n="month">ខែ</span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label" data-i18n="interestRate">អត្រាការប្រាក់</label>
+        <div class="row g-2">
+          <div class="col-7">
+            <div class="input-group">
+              <input id="interestRate" type="number" inputmode="decimal" class="form-control" value="0.77" placeholder="0.77" min="0" step="0.01">
+              <span class="input-group-text">%</span>
+            </div>
+          </div>
+          <div class="col-5">
+            <div class="btn-group segmented w-100" role="group">
+              <input type="radio" class="btn-check" name="rateUnit" id="annualRate">
+              <label class="btn btn-outline-secondary" for="annualRate"><span data-i18n="annual">ប្រចាំឆ្នាំ</span></label>
+
+              <input type="radio" class="btn-check" name="rateUnit" id="monthlyRate" checked>
+              <label class="btn btn-outline-secondary" for="monthlyRate"><span data-i18n="monthly">ប្រចាំខែ</span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="form-label" data-i18n="loanType">ប្រភេទកម្ចី</label>
+        <div class="btn-group segmented w-100" role="group">
+          <input type="radio" class="btn-check" name="loanType" id="fixedLoan">
+          <label class="btn btn-outline-secondary" for="fixedLoan"><span data-i18n="fixed">ថេរ</span></label>
+
+          <input type="radio" class="btn-check" name="loanType" id="flatLoan" checked>
+          <label class="btn btn-outline-secondary" for="flatLoan"><span data-i18n="flat">Flat</span></label>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <button id="clearBtn" type="button" class="btn clear-all-btn w-100" data-i18n="clear">សម្អាត</button>
+      </div>
+    </section>
+
+    <!-- Main Result -->
+    <section class="result-card">
+      <div class="row align-items-center g-4">
+        <div class="col-md-4">
+          <div class="donut">
+            <div class="donut-inner">
+              <div id="monthlyPayment" class="donut-payment">$0.00</div>
+              <div class="donut-sub" data-i18n="perMonth">ក្នុងមួយខែ</div>
+              <div id="donutTerm" class="donut-sub">រយៈពេល 0 ឆ្នាំ</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-8">
+          <div class="summary-row">
+            <div class="summary-label">
+              <span class="dot dot-green"></span>
+              <span data-i18n="downPayment">បង់មុន</span>
+            </div>
+            <strong id="summaryDown">$0.00</strong>
+          </div>
+
+          <div class="summary-row">
+            <div class="summary-label">
+              <span class="dot dot-blue"></span>
+              <span data-i18n="loanAmount">ចំនួនកម្ចី</span>
+            </div>
+            <strong id="summaryLoan">$0.00</strong>
+          </div>
+
+          <div class="summary-row">
+            <div class="summary-label">
+              <span class="dot dot-orange"></span>
+              <span data-i18n="totalInterest">ការប្រាក់សរុប</span>
+            </div>
+            <strong id="summaryInterest">$0.00</strong>
+          </div>
+
+          <div class="summary-row total-row">
+            <div class="summary-label" data-i18n="totalPayment">ការបង់សរុប</div>
+            <strong id="summaryTotal">$0.00</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Amortization table -->
+      <div class="mt-4">
+        <button class="btn btn-outline-secondary w-100 d-flex justify-content-between align-items-center"
+                type="button" data-bs-toggle="collapse" data-bs-target="#loanSchedule"
+                aria-expanded="false" aria-controls="loanSchedule">
+          <span data-i18n="loanPaymentSchedule">តារាងការបង់កម្ចី</span>
+          <span id="scheduleArrow">▼</span>
+        </button>
+
+        <div class="collapse" id="loanSchedule">
+          <div class="table-responsive mt-3">
+            <table class="table table-striped align-middle mb-0">
+              <thead>
+                <tr>
+                  <th data-i18n="thNo">ល.រ</th>
+                  <th data-i18n="thPayment">ការបង់</th>
+                  <th data-i18n="thInterest">ការប្រាក់</th>
+                  <th data-i18n="thPrincipal">ប្រាក់ដើម</th>
+                  <th data-i18n="thBalance">សមតុល្យ</th>
+                </tr>
+              </thead>
+              <tbody id="scheduleBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- History -->
+    <section class="history-card">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="report-title" data-i18n="history">ប្រវត្តិ</div>
+        <div class="d-flex gap-2">
+          <button id="saveHistoryBtn" type="button" class="btn btn-save" data-i18n="saveHistory">រក្សាទុក</button>
+          <button id="clearHistoryBtn" type="button" class="btn btn-clear-all" data-i18n="clearHistory">លុបទាំងអស់</button>
+        </div>
+      </div>
+      <div id="historyMsg" class="small text-success mt-2"></div>
+      <div id="historyList"></div>
+    </section>
+
+    <!-- Report -->
+    <section class="report-card">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="report-title" data-i18n="copyToReport">ចម្លងទៅរបាយការណ៍</div>
+        <button id="copyBtn" class="btn btn-outline-primary" data-i18n="copyReport">ចម្លងរបាយការណ៍</button>
+      </div>
+
+      <div id="reportText" class="report-output"></div>
+
+      <div id="copyMessage" class="small text-success mt-2"></div>
+    </section>
+
+    <!-- Report: 1 to 7 years -->
+    <section class="report-card report-card-all">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="report-title" data-i18n="reportAll">របាយការណ៍ 1 ដល់ 7 ឆ្នាំ</div>
+        <button id="copyAllBtn" class="btn btn-outline-primary" data-i18n="copyReport">ចម្លងរបាយការណ៍</button>
+      </div>
+
+      <div id="reportAllText" class="report-output"></div>
+
+      <div id="copyMessageAll" class="small text-success mt-2"></div>
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container">
+      <p class="mb-2"><span data-i18n="developedBy">អភិវឌ្ឍន៍ដោយ</span> <strong>LyyHuo</strong></p>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a href="https://www.facebook.com/lyy.huo/" target="_blank" rel="noopener noreferrer">Facebook</a>
+        <span>•</span>
+        <a href="https://t.me/Ly_Huo" target="_blank" rel="noopener noreferrer">Telegram</a>
+        <span>•</span>
+        <a href="https://github.com/LyyHuo" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<script src="vendor/bootstrap/bootstrap.bundle.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
