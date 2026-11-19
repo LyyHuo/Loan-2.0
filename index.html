@@ -4,12 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>គណនាកម្ចី</title>
-  <link rel="icon" href="favicon.ico" sizes="any">
   <link rel="icon" type="image/png" sizes="32x32" href="img/32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="img/16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="img/256.png">
-  <link rel="stylesheet" href="css/style.css">
-  </head>
+
+  <!-- Bootstrap 5 -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
 
 <body>
 <div class="splash" aria-hidden="true">
@@ -17,14 +18,17 @@
   <div class="splash-title">គណនាកម្ចី</div>
   <div class="splash-sub">Loan Calculator</div>
   <div class="splash-bar"><i></i></div>
-  <div class="splash-version">Version 2.0.0</div>
+  <div class="splash-version">Version 2.1.0</div>
 </div>
 <div class="app">
   <div class="content-area">
     <!-- Header -->
     <header class="topbar">
       <div class="d-flex justify-content-between align-items-center">
-        <h1> &nbsp; <span data-i18n="loanCalculator">គណនាកម្ចី</span></h1>
+        <div class="brand">
+          <span class="brand-coin" aria-hidden="true">$</span>
+          <h1><span data-i18n="loanCalculator">គណនាកម្ចី</span></h1>
+        </div>
         <div class="d-flex align-items-center gap-2">
           <button class="btn btn-sm btn-light p-1" id="languageBtn" type="button">
             <span id="languageFlag" class="flag-emoji" role="img" aria-label="Switch language">🇬🇧</span>
@@ -40,7 +44,7 @@
         <label class="form-label" data-i18n="price">តម្លៃ</label>
         <div class="input-group">
           <span class="input-group-text">$</span>
-          <input id="price" type="number" inputmode="numeric" pattern="[0-9]*" class="form-control" value="0" placeholder="0" min="0" step="100">
+          <input id="price" type="text" inputmode="decimal" autocomplete="off" data-money class="form-control" value="0" placeholder="0">
           <button class="input-group-text clear-btn" onclick="clearInput('price')">×</button>
         </div>
       </div>
@@ -51,7 +55,7 @@
           <div class="col-7">
             <div class="input-group">
               <span class="input-group-text">$</span>
-              <input id="downPayment" type="number" inputmode="numeric" pattern="[0-9]*" class="form-control" value="0" placeholder="0" min="0" step="100">
+              <input id="downPayment" type="text" inputmode="decimal" autocomplete="off" data-money class="form-control" value="0" placeholder="0">
               <button class="input-group-text clear-btn" onclick="clearInput('downPayment')">×</button>
             </div>
           </div>
@@ -174,6 +178,14 @@
         </button>
 
         <div class="collapse" id="loanSchedule">
+          <div class="d-flex justify-content-end align-items-center flex-wrap gap-2 mt-3">
+            <div id="downloadMenu" class="dl-menu" hidden>
+              <button type="button" class="btn btn-sm download-btn ghost" data-fmt="csv">CSV</button>
+              <button type="button" class="btn btn-sm download-btn ghost" data-fmt="xlsx">Excel</button>
+              <button type="button" class="btn btn-sm download-btn ghost" data-fmt="pdf">PDF</button>
+            </div>
+            <button id="downloadTableBtn" type="button" class="btn btn-sm download-btn" data-i18n="downloadTable" hidden>Download table</button>
+          </div>
           <div class="table-responsive mt-3">
             <table class="table table-striped align-middle mb-0">
               <thead>
@@ -233,7 +245,7 @@
   <!-- Footer -->
   <footer class="app-footer">
     <div class="container">
-      <p class="mb-2"><span data-i18n="developedBy">អភិវឌ្ឍន៍ដោយ</span> <strong>LyyHuo</strong></p>
+      <p class="mb-2"><span data-i18n="developedBy">អភិវឌ្ឍន៍ដោយ</span> <strong><span class="name-en">Ly Huo</span><span class="name-km">លី ហ៊ូ</span></strong></p>
       <div class="d-flex justify-content-center gap-3 flex-wrap">
         <a href="https://www.facebook.com/lyy.huo/" target="_blank" rel="noopener noreferrer">Facebook</a>
         <span>•</span>

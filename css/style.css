@@ -1,4 +1,4 @@
-/* Fonts (local, Kantumruy Pro) */
+/* Fonts (bundled) */
 @font-face { font-family: 'Kantumruy Pro'; font-style: normal; font-weight: 300; font-display: swap; src: url('../fonts/kantumruy-pro-khmer-300-normal.woff2') format('woff2'); unicode-range: U+1780-17FF,U+19E0-19FF,U+200C; }
 @font-face { font-family: 'Kantumruy Pro'; font-style: normal; font-weight: 400; font-display: swap; src: url('../fonts/kantumruy-pro-khmer-400-normal.woff2') format('woff2'); unicode-range: U+1780-17FF,U+19E0-19FF,U+200C; }
 @font-face { font-family: 'Kantumruy Pro'; font-style: normal; font-weight: 500; font-display: swap; src: url('../fonts/kantumruy-pro-khmer-500-normal.woff2') format('woff2'); unicode-range: U+1780-17FF,U+19E0-19FF,U+200C; }
@@ -365,6 +365,50 @@
     :root[data-theme='dark'] .topbar .btn-light { background: rgba(255,255,255,.1); }
     @keyframes flashDark { from { background: #243a73; } to { background: #0b1530; } }
     :root[data-theme='dark'] .report-output.flash { animation-name: flashDark; }
+
+    /* ===== Download table ===== */
+    .download-btn { background: var(--petrol); border: 0; color: #fff; border-radius: 10px; font-weight: 600; padding: 6px 14px; }
+    .download-btn:hover { background: var(--petrol-deep); color: #fff; }
+    .download-btn[hidden] { display: none; }
+    .download-btn.ghost { background: transparent; color: var(--petrol); border: 1.5px solid var(--petrol); }
+    .download-btn.ghost:hover { background: var(--petrol); color: #fff; }
+    .dl-menu { display: flex; gap: 8px; }
+    .dl-menu[hidden] { display: none; }
+
+    /* ===== Sticky header (redesign) ===== */
+    .topbar {
+      position: sticky; top: 0; z-index: 1000;
+      margin: 0 -14px; padding: 12px 18px;
+      border-radius: 0 0 22px 22px; border-bottom: none;
+      background: linear-gradient(135deg, rgba(11,42,111,.94), rgba(7,26,71,.96));
+      -webkit-backdrop-filter: blur(14px) saturate(160%);
+      backdrop-filter: blur(14px) saturate(160%);
+      box-shadow: 0 10px 30px -12px rgba(7,26,71,.55);
+      transition: padding .3s ease, box-shadow .3s ease, border-radius .3s ease;
+    }
+    .topbar::after {
+      content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      border-radius: 0 0 22px 22px;
+    }
+    .topbar .brand { display: flex; align-items: center; gap: 10px; }
+    .topbar .brand-coin {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--gold); color: var(--petrol-deep);
+      display: grid; place-items: center; font-weight: 800; font-size: 18px;
+      box-shadow: 0 0 0 3px rgba(242,176,30,.25);
+      transition: transform .3s ease;
+    }
+    .topbar h1 { transition: font-size .3s ease; }
+    .topbar .btn-light { transition: transform .2s ease, background .2s ease; }
+    .topbar .btn-light:hover { transform: translateY(-1px); background: rgba(255,255,255,.22); }
+    .topbar.scrolled { padding: 8px 18px; border-radius: 0 0 16px 16px; box-shadow: 0 14px 30px -14px rgba(7,26,71,.7); }
+    .topbar.scrolled .brand-coin { transform: scale(.82); }
+    .topbar.scrolled h1 { font-size: 18px; }
+
+    .name-km { display: none; }
+    html[lang="km"] .name-km { display: inline; }
+    html[lang="km"] .name-en { display: none; }
 
     /* ===== Scroll animation ===== */
     .reveal { opacity: 0; transform: translateY(44px) scale(.97); animation: none !important; transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1), box-shadow .3s; }
