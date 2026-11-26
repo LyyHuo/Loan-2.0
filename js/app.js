@@ -139,6 +139,7 @@
     const result = getCalculation(loan, months);
 
     $("monthlyPayment").textContent = "$" + money(result.payment);
+    $("perDay").textContent = (currentLanguage === "km" ? "ការបង់ប្រចាំថ្ងៃ " : "Daily payment ") + "$" + money(result.payment / 30);
     $("donutTerm").textContent =
       $("termYear").checked ? (currentLanguage === "km" ? `រយៈពេល ${term} ឆ្នាំ` : `Over ${term} Years`) : (currentLanguage === "km" ? `រយៈពេល ${term} ខែ` : `Over ${term} Months`);
 
@@ -358,7 +359,7 @@
     $("price").value = "";
     $("downPayment").value = "";
     $("downPercent").value = "";
-    $("term").value = "0";
+    $("term").value = "7";
     $("interestRate").value = "0.77";
     $("termYear").checked = true;
     $("monthlyRate").checked = true;
@@ -1115,6 +1116,252 @@
     const update = () => bar.classList.toggle("scrolled", window.scrollY > 40);
     window.addEventListener("scroll", update, { passive: true });
     update();
+  })();
+
+  // ===== Compare page: two loan options side by side =====
+  (function () {
+    const area = document.querySelector(".content-area");
+    const topbar = document.querySelector(".topbar");
+    // The top-bar button was removed; the page is still reachable with #compare
+    const navBtn = document.getElementById("compareNavBtn") || document.createElement("button");
+    if (!area || !topbar) return;
+
+    const CT = {
+      en: { title: "Compare offers", colA: "Option A", colB: "Option B", price: "Price", down: "Down payment",
+            term: "Term", rate: "Interest rate", years: "Years", months: "Months", monthly: "Monthly", annual: "Annual",
+            flat: "Flat", fixed: "Fixed", useCalc: "Use calculator values", monthlyPay: "Monthly payment",
+            loanAmt: "Loan amount", totalInt: "Total interest", totalCost: "Total cost", termMonths: "Months",
+            lower: "Lower total cost", equal: "Same total cost", diff: "Difference", back: "Back to calculator" },
+      km: { title: "ប្រៀបធៀបការផ្ដល់ជូន", colA: "ជម្រើស A", colB: "ជម្រើស B", price: "តម្លៃ", down: "បង់មុន",
+            term: "រយៈពេល", rate: "អត្រាការប្រាក់", years: "ឆ្នាំ", months: "ខែ", monthly: "ប្រចាំខែ", annual: "ប្រចាំឆ្នាំ",
+            flat: "Flat", fixed: "Fixed", useCalc: "យកពីម៉ាស៊ីនគណនា", monthlyPay: "ការបង់ក្នុងមួយខែ",
+            loanAmt: "ចំនួនកម្ចី", totalInt: "ការប្រាក់សរុប", totalCost: "ការបង់សរុប", termMonths: "ចំនួនខែ",
+            lower: "ថោកជាង", equal: "ស្មើគ្នា", diff: "ខុសគ្នា", back: "ត្រឡប់ទៅម៉ាស៊ីនគណនា" }
+    };
+    const t = k => (CT[currentLanguage] || CT.en)[k];
+    const $c = id => document.getElementById(id);
+
+    // Nav button in the top bar
+    navBtn.textContent = "⇄";
+    navBtn.setAttribute("aria-label", "Compare");
+    navBtn.title = "Compare";
+
+    // Compare section
+    const page = document.createElement("section");
+    page.id = "comparePage";
+    page.className = "compare-page";
+    page.style.display = "none";
+    area.appendChild(page);
+
+    const state = { A: { years: true, annual: false, fixed: false }, B: { years: true, annual: false, fixed: false } };
+
+    function optionHTML(k) {
+      return `
+        <div class="cmp-col">
+          <h3 class="cmp-head" data-ck="col${k}"></h3>
+          <label data-ck="price"></label>
+          <input class="cmp-in" data-money id="cmp${k}Price" inputmode="decimal" value="0">
+          <label data-ck="down"></label>
+          <input class="cmp-in" data-money id="cmp${k}Down" inputmode="decimal" value="0">
+          <label data-ck="term"></label>
+          <div class="cmp-row">
+            <input class="cmp-in" id="cmp${k}Term" inputmode="numeric" value="0">
+            <div class="cmp-seg" data-group="years" data-k="${k}">
+              <button type="button" data-v="1" data-ck="years"></button>
+              <button type="button" data-v="0" data-ck="months"></button>
+            </div>
+          </div>
+          <label data-ck="rate"></label>
+          <div class="cmp-row">
+            <input class="cmp-in" id="cmp${k}Rate" inputmode="decimal" value="0.77">
+            <div class="cmp-seg" data-group="annual" data-k="${k}">
+              <button type="button" data-v="0" data-ck="monthly"></button>
+              <button type="button" data-v="1" data-ck="annual"></button>
+            </div>
+          </div>
+          <label data-ck="loanType"></label>
+          <div class="cmp-seg" data-group="fixed" data-k="${k}">
+            <button type="button" data-v="0" data-ck="flat">Flat</button>
+            <button type="button" data-v="1" data-ck="fixed">Fixed</button>
+          </div>
+          <button type="button" class="cmp-use" data-k="${k}" data-ck="useCalc"></button>
+        </div>`;
+    }
+
+    page.innerHTML = `
+      <div class="cmp-top">
+        <button type="button" class="cmp-back" id="cmpBack">←</button>
+        <h2 class="cmp-title" data-ck="title"></h2>
+      </div>
+      <div class="cmp-grid">${optionHTML("A")}${optionHTML("B")}</div>
+      <div class="cmp-results card-like" id="cmpResults"></div>`;
+
+    function readOption(k) {
+      const s = state[k];
+      const price = Math.max(0, parseFloat(String($c(`cmp${k}Price`).value).replace(/,/g, "")) || 0);
+      let down = Math.max(0, parseFloat(String($c(`cmp${k}Down`).value).replace(/,/g, "")) || 0);
+      if (down > price) down = price;
+      const loan = Math.max(0, price - down);
+      const tv = Math.max(0, Math.floor(parseFloat($c(`cmp${k}Term`).value) || 0));
+      const months = Math.max(1, s.years ? tv * 12 : tv);
+      const raw = parseFloat($c(`cmp${k}Rate`).value) || 0;
+      const r = s.annual ? raw / 12 / 100 : raw / 100;
+      let payment, interest;
+      if (s.fixed) {
+        payment = r === 0 ? loan / months : loan * r * Math.pow(1 + r, months) / (Math.pow(1 + r, months) - 1);
+        interest = payment * months - loan;
+      } else {
+        interest = loan * r * months;
+        payment = (loan + interest) / months;
+      }
+      return { price, down, loan, months, payment, interest, cost: down + loan + interest, tv };
+    }
+
+    function renderResults() {
+      const a = readOption("A"), b = readOption("B");
+      const lowerA = a.cost < b.cost, lowerB = b.cost < a.cost;
+      const diff = Math.abs(a.cost - b.cost);
+      let verdict;
+      if (!lowerA && !lowerB) verdict = `<div class="cmp-verdict">${t("equal")}</div>`;
+      else verdict = `<div class="cmp-verdict">${lowerA ? t("colA") : t("colB")}: ${t("lower")} · ${t("diff")} $${money2(diff)}</div>`;
+      const row = (label, fa, fb, win) => `<tr><th>${label}</th><td class="${win === "A" ? "cmp-win" : ""}">${fa}</td><td class="${win === "B" ? "cmp-win" : ""}">${fb}</td></tr>`;
+      const money = v => "$" + money2(v);
+      $c("cmpResults").innerHTML = `
+        ${verdict}
+        <table class="cmp-table">
+          <thead><tr><th></th><th>${t("colA")}</th><th>${t("colB")}</th></tr></thead>
+          <tbody>
+            ${row(t("monthlyPay"), money(a.payment), money(b.payment), a.payment < b.payment ? "A" : b.payment < a.payment ? "B" : null)}
+            ${row(t("loanAmt"), money(a.loan), money(b.loan), null)}
+            ${row(t("totalInt"), money(a.interest), money(b.interest), a.interest < b.interest ? "A" : b.interest < a.interest ? "B" : null)}
+            ${row(t("totalCost"), money(a.cost), money(b.cost), lowerA ? "A" : lowerB ? "B" : null)}
+            ${row(t("termMonths"), a.months, b.months, null)}
+          </tbody>
+        </table>`;
+    }
+
+    function money2(n) {
+      return Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function applyText() {
+      page.querySelectorAll("[data-ck]").forEach(el => {
+        const key = el.dataset.ck;
+        if (key === "colA" || key === "colB") el.textContent = t(key);
+        else if (key === "title") el.textContent = t("title");
+        else if (key === "loanType") el.textContent = t("loanType") || "Loan type";
+        else if (key === "flat") el.textContent = "Flat";
+        else if (key === "fixed") el.textContent = "Fixed";
+        else if (key && CT[currentLanguage] && CT[currentLanguage][key]) el.textContent = t(key);
+      });
+      page.querySelectorAll(".cmp-head").forEach(h => h.textContent = h.dataset.ck === "colA" ? t("colA") : t("colB"));
+      page.querySelectorAll("label[data-ck]").forEach(l => { l.textContent = t(l.dataset.ck) || l.textContent; });
+      // Loan type label is not in CT, so keep it short and bilingual
+      page.querySelectorAll('label[data-ck="loanType"]').forEach(l => l.textContent = currentLanguage === "km" ? "ប្រភេទកម្ចី" : "Loan type");
+      page.querySelectorAll(".cmp-seg button").forEach(b => {
+        const g = b.parentElement.dataset.group;
+        if (g === "years") b.textContent = t(b.dataset.v === "1" ? "years" : "months");
+        if (g === "annual") b.textContent = t(b.dataset.v === "1" ? "annual" : "monthly");
+        if (g === "fixed") b.textContent = b.dataset.v === "1" ? "Fixed" : "Flat";
+      });
+      page.querySelectorAll(".cmp-use").forEach(b => b.textContent = t("useCalc"));
+      $c("cmpBack").title = t("back");
+      renderResults();
+    }
+
+    function syncSeg() {
+      page.querySelectorAll(".cmp-seg").forEach(seg => {
+        const k = seg.dataset.k, s = state[k];
+        const key = seg.dataset.group === "years" ? "years" : seg.dataset.group === "annual" ? "annual" : "fixed";
+        seg.querySelectorAll("button").forEach(b => b.classList.toggle("on", (b.dataset.v === "1") === !!s[key]));
+      });
+    }
+
+    function copyFromCalc(k) {
+      $c(`cmp${k}Price`).value = $c("price").value;
+      $c(`cmp${k}Down`).value = $c("downPayment").value;
+      $c(`cmp${k}Term`).value = $c("term").value;
+      $c(`cmp${k}Rate`).value = $c("interestRate").value;
+      state[k] = { years: $c("termYear").checked, annual: $c("annualRate").checked, fixed: $c("fixedLoan").checked };
+      syncSeg();
+      renderResults();
+    }
+
+    // Live updates
+    page.addEventListener("input", e => {
+      if (e.target.matches("[data-money]") && typeof formatMoneyInput === "function") formatMoneyInput(e.target);
+      renderResults();
+    });
+    page.addEventListener("click", e => {
+      const seg = e.target.closest(".cmp-seg button");
+      if (seg) {
+        const g = seg.parentElement.dataset.group, k = seg.parentElement.dataset.k, v = seg.dataset.v === "1";
+        if (g === "years") state[k].years = v;
+        if (g === "annual") state[k].annual = v;
+        if (g === "fixed") state[k].fixed = v;
+        syncSeg(); renderResults(); return;
+      }
+      const use = e.target.closest(".cmp-use");
+      if (use) { copyFromCalc(use.dataset.k); return; }
+      if (e.target.closest("#cmpBack")) setView(false);
+    });
+
+    // Show / hide the calculator vs. the compare page
+    let comparing = false;
+    function setView(on) {
+      comparing = on;
+      Array.from(area.children).forEach(el => {
+        if (el === topbar || el === page) return;
+        el.style.display = on ? "none" : "";
+      });
+      page.style.display = on ? "" : "none";
+      navBtn.classList.toggle("on", on);
+      window.scrollTo(0, 0);
+      if (on) { applyText(); syncSeg(); }
+      try { history.replaceState(null, "", on ? "#compare" : location.pathname + location.search); } catch (e) {}
+    }
+
+    navBtn.addEventListener("click", () => setView(!comparing));
+    window.addEventListener("hashchange", () => setView(location.hash === "#compare"));
+
+    // Initial state from the calculator, then keep the language text current
+    copyFromCalc("A");
+    state.B = { ...state.A };
+    copyFromCalc("B");
+    new MutationObserver(() => { if (comparing) applyText(); }).observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
+    if (location.hash === "#compare") setView(true);
+  })();
+
+  // ===== Term presets: 5, 6, 7 years =====
+  (function () {
+    const btns = document.querySelectorAll(".term-preset");
+    const termInput = document.getElementById("term");
+    const yearRadio = document.getElementById("termYear");
+    const monthRadio = document.getElementById("termMonth");
+    if (!btns.length || !termInput || !yearRadio || !monthRadio) return;
+
+    const refresh = () => {
+      const km = currentLanguage === "km";
+      btns.forEach(b => {
+        const y = Number(b.dataset.years);
+        b.textContent = km ? `${y} ឆ្នាំ` : `${y} years`;
+        b.classList.toggle("active", yearRadio.checked && Number(termInput.value) === y);
+      });
+    };
+
+    btns.forEach(b => b.addEventListener("click", () => {
+      yearRadio.checked = true;
+      monthRadio.checked = false;
+      termInput.value = b.dataset.years;
+      termInput.dispatchEvent(new Event("input", { bubbles: true }));
+      yearRadio.dispatchEvent(new Event("change", { bubbles: true }));
+      refresh();
+    }));
+    termInput.addEventListener("input", refresh);
+    yearRadio.addEventListener("change", refresh);
+    monthRadio.addEventListener("change", refresh);
+    new MutationObserver(refresh).observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
+    refresh();
   })();
 
   // ===== Scroll animation =====

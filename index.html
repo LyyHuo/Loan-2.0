@@ -18,7 +18,7 @@
   <div class="splash-title">គណនាកម្ចី</div>
   <div class="splash-sub">Loan Calculator</div>
   <div class="splash-bar"><i></i></div>
-  <div class="splash-version">Version 2.1.0</div>
+  <div class="splash-version">Version 2.1.1</div>
 </div>
 <div class="app">
   <div class="content-area">
@@ -72,7 +72,13 @@
         <label class="form-label" data-i18n="term">រយៈពេល</label>
         <div class="row g-2">
           <div class="col-7">
-            <input id="term" type="number" inputmode="numeric" pattern="[0-9]*" class="form-control" value="0" placeholder="0" min="0" step="1">
+            <input id="term" type="number" inputmode="numeric" pattern="[0-9]*" class="form-control" value="7" placeholder="0" min="0" step="1">
+
+            <div class="term-presets">
+              <button type="button" class="btn btn-outline-secondary term-preset" data-years="5">5</button>
+              <button type="button" class="btn btn-outline-secondary term-preset" data-years="6">6</button>
+              <button type="button" class="btn btn-outline-secondary term-preset" data-years="7">7</button>
+            </div>
           </div>
           <div class="col-5">
             <div class="btn-group segmented w-100" role="group">
@@ -132,6 +138,7 @@
               <div id="monthlyPayment" class="donut-payment">$0.00</div>
               <div class="donut-sub" data-i18n="perMonth">ក្នុងមួយខែ</div>
               <div id="donutTerm" class="donut-sub">រយៈពេល 0 ឆ្នាំ</div>
+              <div id="perDay" class="donut-sub" style="order: 4; margin-top: 4px;">ការបង់ប្រចាំថ្ងៃ $0.00</div>
             </div>
           </div>
         </div>
