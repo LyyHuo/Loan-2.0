@@ -1364,6 +1364,178 @@
     refresh();
   })();
 
+  // ===== Quick compare: down payment and interest rate =====
+  (function () {
+    const card = document.querySelector(".result-card");
+    if (!card) return;
+    const QT = {
+      en: { down: "Compare down payment", rate: "Compare interest rate", opt: "Option", dpay: "Down payment",
+            monthly: "Monthly", interest: "Total interest", current: "current" },
+      km: { down: "ប្រៀបធៀបបង់មុន", rate: "ប្រៀបធៀបអត្រាការប្រាក់", opt: "ជម្រើស", dpay: "បង់មុន",
+            monthly: "ប្រចាំខែ", interest: "ការប្រាក់សរុប", current: "បច្ចុប្បន្ន" }
+    };
+    const q = k => (QT[currentLanguage] || QT.en)[k];
+    const $q = id => document.getElementById(id);
+    const num = v => parseFloat(String(v).replace(/,/g, "")) || 0;
+    const money = n => "$" + Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const wrap = document.createElement("div");
+    wrap.className = "cmp-quick";
+    wrap.innerHTML = `
+      <div class="cmp-quick-btns">
+        <button type="button" class="cmp-quick-btn" data-q="down"></button>
+        <button type="button" class="cmp-quick-btn" data-q="rate"></button>
+      </div>
+      <div class="cmp-quick-out" id="cmpQuickOut" hidden></div>
+      <button type="button" class="cmp-quick-copy" id="cmpQuickCopy" hidden></button>`;
+    card.appendChild(wrap);
+
+    function current() {
+      const price = num($q("price").value);
+      let down = num($q("downPayment").value);
+      if (down > price) down = price;
+      const tv = Math.max(0, Math.floor(num($q("term").value)));
+      const years = $q("termYear").checked;
+      const months = Math.max(1, years ? tv * 12 : tv);
+      const rateRaw = num($q("interestRate").value);
+      const annual = $q("annualRate").checked;
+      const fixed = $q("fixedLoan").checked;
+      const r = annual ? rateRaw / 12 / 100 : rateRaw / 100;
+      return { price, down, months, rateRaw, annual, fixed, r, unit: annual ? "/yr" : "/mo" };
+    }
+
+    function calc(loan, months, r, fixed) {
+      let payment, interest;
+      if (fixed) {
+        payment = r === 0 ? loan / months : loan * r * Math.pow(1 + r, months) / (Math.pow(1 + r, months) - 1);
+        interest = payment * months - loan;
+      } else {
+        interest = loan * r * months;
+        payment = (loan + interest) / months;
+      }
+      return { payment, interest };
+    }
+
+    // Remembers the last text shown in each cell, so only changed values animate
+    const lastCell = {};
+    let tableKey = "";
+    function table(headers, rows) {
+      return `<table class="cmp-quick-table"><thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead><tbody>${
+        rows.map((r, ri) => `<tr>${r.map((c, ci) => `<td data-k="${tableKey}-${ri}-${ci}">${c}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+    }
+    function markChanged(out) {
+      out.querySelectorAll("td[data-k]").forEach(td => {
+        const key = td.dataset.k, text = td.textContent;
+        if (lastCell[key] !== undefined && lastCell[key] !== text) {
+          td.classList.remove("cmp-changed");
+          void td.offsetWidth;
+          td.classList.add("cmp-changed");
+        }
+        lastCell[key] = text;
+      });
+    }
+
+    function render(kind) {
+      const c = current();
+      const out = $q("cmpQuickOut");
+      if (kind === "down") {
+        const rows = [10, 20, 30, 40, 50, 60, 70, 80].map(pct => {
+          const down = c.price * pct / 100;
+          const loan = Math.max(0, c.price - down);
+          const x = calc(loan, c.months, c.r, c.fixed);
+          return [pct + "%", money(down), money(x.payment), money(x.interest)];
+        });
+        tableKey = "down";
+        out.innerHTML = table([q("opt"), q("dpay"), q("monthly"), q("interest")], rows);
+        markChanged(out);
+      } else {
+        const rates = [c.rateRaw, 0.88, 1.25, 1.5];
+        const rows = rates.map((rate, i) => {
+          const r = c.annual ? rate / 12 / 100 : rate / 100;
+          const loan = Math.max(0, c.price - c.down);
+          const x = calc(loan, c.months, r, c.fixed);
+          const label = rate.toFixed(2) + "%";
+          return [label, money(x.payment), money(x.interest)];
+        });
+        tableKey = "rate";
+        out.innerHTML = table([q("opt"), q("monthly"), q("interest")], rows);
+        markChanged(out);
+      }
+    }
+
+    // Builds a plain-text summary of the open table, ready to paste into a chat
+    function copyText() {
+      const c = current();
+      const km = currentLanguage === "km";
+      const fmt0 = n => Number(n).toLocaleString("en-US", { maximumFractionDigits: 0 });
+      const loan = Math.max(0, c.price - c.down);
+      const pct = c.price > 0 ? Math.round(c.down / c.price * 100) : 0;
+      const tv = Math.max(0, Math.floor(num($q("term").value) || 0));
+      const years = $q("termYear").checked;
+      const termTxt = years ? (km ? `${tv} ឆ្នាំ` : `${tv} years`) : (km ? `${tv} ខែ` : `${tv} months`);
+      const lines = [
+        km ? `ករណីឡានតម្លៃ ${fmt0(c.price)}$` : `Car price ${fmt0(c.price)}$`,
+        km ? `- បង់មុន ${fmt0(c.down)}$ (${pct}%)` : `- Down payment ${fmt0(c.down)}$ (${pct}%)`,
+        km ? `- កម្ចី ${fmt0(loan)}$ (${100 - pct}%)` : `- Loan ${fmt0(loan)}$ (${100 - pct}%)`,
+        km ? `- រយៈពេល ${termTxt}` : `- Term ${termTxt}`,
+        ""
+      ];
+      if (open === "rate") {
+        [c.rateRaw, 0.88, 1.25, 1.5].forEach(rate => {
+          const r = c.annual ? rate / 12 / 100 : rate / 100;
+          const x = calc(loan, c.months, r, c.fixed);
+          lines.push(km ? `ការប្រាក់ ${rate.toFixed(2)}% — បង់ប្រចាំខែ $${fmt0(x.payment)}`
+                        : `Rate ${rate.toFixed(2)}% — Monthly $${fmt0(x.payment)}`);
+        });
+      } else {
+        [10, 20, 30, 40, 50, 60, 70, 80].forEach(p => {
+          const down = c.price * p / 100;
+          const x = calc(Math.max(0, c.price - down), c.months, c.annual ? c.rateRaw / 12 / 100 : c.rateRaw / 100, c.fixed);
+          lines.push(km ? `បង់មុន ${p}% (${fmt0(down)}$) — បង់ប្រចាំខែ $${fmt0(x.payment)}`
+                        : `Down ${p}% (${fmt0(down)}$) — Monthly $${fmt0(x.payment)}`);
+        });
+      }
+      return lines.join("\n");
+    }
+
+    $q("cmpQuickCopy").addEventListener("click", () => {
+      const btn = $q("cmpQuickCopy");
+      const text = copyText();
+      const done = () => {
+        const old = btn.textContent;
+        btn.textContent = currentLanguage === "km" ? "បានចម្លង ✓" : "Copied ✓";
+        setTimeout(() => { btn.textContent = old; }, 1500);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, done);
+      else done();
+    });
+
+    let open = null;
+    wrap.addEventListener("click", e => {
+      const b = e.target.closest(".cmp-quick-btn");
+      if (!b) return;
+      const out = $q("cmpQuickOut");
+      if (open === b.dataset.q) {
+        open = null; out.hidden = true;
+      } else {
+        open = b.dataset.q; out.hidden = false; render(open);
+      }
+      wrap.querySelectorAll(".cmp-quick-btn").forEach(x => x.classList.toggle("on", x.dataset.q === open));
+      $q("cmpQuickCopy").hidden = !open;
+    });
+
+    const labels = () => {
+      wrap.querySelector('[data-q="down"]').textContent = q("down");
+      wrap.querySelector('[data-q="rate"]').textContent = q("rate");
+      $q("cmpQuickCopy").textContent = currentLanguage === "km" ? "ចម្លង" : "Copy";
+      if (open) render(open);
+    };
+    ["price", "downPayment", "downPercent", "term", "interestRate"].forEach(id => $q(id).addEventListener("input", () => open && render(open)));
+    ["termYear", "termMonth", "annualRate", "monthlyRate", "fixedLoan", "flatLoan"].forEach(id => $q(id).addEventListener("change", () => open && render(open)));
+    new MutationObserver(labels).observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
+    labels();
+  })();
+
   // ===== Scroll animation =====
   (function () {
     const bar = document.createElement('div');

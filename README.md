@@ -1,4 +1,4 @@
-# គណនាកម្ចី – Loan Calculator (v2.1.1)
+# គណនាកម្ចី – Loan Calculator (v2.2.0)
 
 Car loan calculator in Khmer and English. Plain HTML, CSS and JavaScript, no build step.
 
